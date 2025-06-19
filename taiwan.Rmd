@@ -1,0 +1,96 @@
+---
+title: "taiwan"
+author: "Amy Fox"
+date: "2025-06-17"
+output: html_document
+---
+
+Download GPX data from connect.Garmin.com
+
+Another option would be to read in the .fit files for more data
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(sf)
+library(leaflet)
+```
+
+```{r}
+gpx_folder <- "./data/taiwan/"
+
+gpx_files <- list.files(gpx_folder, pattern = "\\.gpx$", full.names = TRUE)
+
+# read track points from the GPX files
+read_gpx_track <- function(file) {
+  st_read(file, layer = "track_points", quiet = TRUE) %>%
+    st_transform(4326)  # Ensure it's in lat/lon
+}
+
+# Combine all GPX tracks
+all_tracks <- map_dfr(gpx_files, read_gpx_track)
+
+```
+
+Create west coast train line
+```{r}
+# # create train GPX File for West Coast
+# gpx_content <- c(
+#   '<?xml version="1.0" encoding="UTF-8"?>',
+#   '<gpx version="1.1" creator="Amy + ChatGPT" xmlns="http://www.topografix.com/GPX/1/1">',
+#   '  <trk>',
+#   '    <name>Hsinchu to Kaohsiung HSR</name>',
+#   '    <trkseg>',
+#   '      <trkpt lat="24.8066" lon="121.0003"><name>Hsinchu</name></trkpt>',
+#   '      <trkpt lat="24.1121" lon="120.6150"><name>Taichung</name></trkpt>',
+#   '      <trkpt lat="23.4590" lon="120.3273"><name>Chiayi</name></trkpt>',
+#   '      <trkpt lat="22.9244" lon="120.2852"><name>Tainan</name></trkpt>',
+#   '      <trkpt lat="22.6867" lon="120.3089"><name>Zuoying (Kaohsiung)</name></trkpt>',
+#   '    </trkseg>',
+#   '  </trk>',
+#   '</gpx>'
+# )
+# 
+# # write to file
+# writeLines(gpx_content, "./data/taiwan/train_hsinchu_to_kaohsiung.gpx")
+```
+
+
+Read in west coast train line
+```{r}
+train_gpx_file <- "./data/taiwan/train_hsinchu_to_kaohsiung.gpx"
+
+train_track <- st_read(gpx_file, layer = "track_points")
+
+# Add an index so I can manually arrange in order
+train_track <- train_track %>%
+  mutate(order = row_number()) %>%
+  arrange(order)
+
+# Combine into LINESTRING manually
+train_track_line <- train_track %>%
+  arrange(order) %>%
+  st_coordinates() %>%
+  st_linestring() %>%
+  st_sfc(crs = 4326)
+```
+
+
+```{r}
+# Create a leaflet map
+leaflet() %>%
+  addTiles() %>%
+  addProviderTiles(providers$Esri.WorldTopoMap) %>%
+#   addProviderTiles(providers$OpenStreetMap) %>%
+  addCircleMarkers(data = all_tracks,
+                   radius = 1,
+                   color = "blue",
+                   fillOpacity = 0.7,
+                   label = ~paste("Time:", time)) %>%
+  addPolylines(data = train_track_line, color = "red", weight = 6) 
+```
+
+
