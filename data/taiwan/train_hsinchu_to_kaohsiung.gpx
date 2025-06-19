@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="ChatGPT - OpenAI" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>Hsinchu to Kaohsiung HSR</name>
+    <trkseg>
+      <trkpt lat="24.8066" lon="121.0003"><name>Hsinchu</name></trkpt>
+      <trkpt lat="24.1121" lon="120.6150"><name>Taichung</name></trkpt>
+      <trkpt lat="23.4590" lon="120.3273"><name>Chiayi</name></trkpt>
+      <trkpt lat="22.9244" lon="120.2852"><name>Tainan</name></trkpt>
+      <trkpt lat="22.6867" lon="120.3089"><name>Zuoying (Kaohsiung)</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
