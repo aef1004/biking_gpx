@@ -1,0 +1,77 @@
+---
+title: "korea"
+author: "Amy Fox"
+date: "2025-06-25"
+output: html_document
+---
+Download .fit data from connect.Garmin.com
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE) # either message or warning to stop the dplyr output
+```
+
+Install package from github that converts FIT files to df
+```{r}
+# if(!requireNamespace("remotes")) {
+#     install.packages("remotes")
+# }
+# remotes::install_github("grimbough/FITfileR")
+```
+
+```{r}
+library(FITfileR)
+library(dplyr)
+library(leaflet)
+```
+
+
+```{r}
+# test with one example
+df1 <- readFitFile("./data/korea/15870474757_ACTIVITY.fit") %>%
+    records() %>%
+  bind_rows() %>%
+  arrange(timestamp) %>%
+  filter(position_lat < 179.9 & position_long < 179.9) # remove when gps still locating..
+
+```
+
+
+
+```{r}
+fit_folder <- "./data/korea"
+fit_files <- list.files(fit_folder, pattern = "\\.fit$", full.names = TRUE)
+
+# read data from .fit file
+get_fit_gps <- function(file) {
+  df <- readFitFile(file) %>%
+    records() %>%
+    bind_rows() %>%
+    filter(position_lat < 179.9 & position_long < 179.9) 
+  
+  return(df)
+}
+
+# combine all GPS data
+all_gps_data <- lapply(fit_files, get_fit_gps) %>%
+  bind_rows() %>%
+  arrange(timestamp)
+```
+
+Print out leaflet track
+```{r}
+all_gps_data %>% 
+  select(position_long, position_lat) %>%
+  as.matrix() %>%
+  leaflet(  ) %>%
+  addTiles() %>%
+  addPolylines( )
+```
+
+
+```{r}
+all_gps_data %>%
+  head()
+```
+
