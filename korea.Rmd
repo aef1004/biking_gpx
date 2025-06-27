@@ -4,12 +4,17 @@ author: "Amy Fox"
 date: "2025-06-25"
 output: html_document
 ---
+
 Download .fit data from connect.Garmin.com
 
-
+Additional things to try
+ - add in points in the cities where we spent the night
+ - see if I can show the speed as the color on the graph
+ - could try a shiny app and click on the different days to show more information about it like total distance, avg speed, ascent/descent
+ 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(message = FALSE) # either message or warning to stop the dplyr output
+knitr::opts_chunk$set(message = FALSE) 
 ```
 
 Install package from github that converts FIT files to df
@@ -59,14 +64,39 @@ all_gps_data <- lapply(fit_files, get_fit_gps) %>%
   arrange(timestamp)
 ```
 
+Find position of where we stopped for the night each night
+
+I want this to ultimately say something like "Day 1: city name"
+```{r}
+
+clean_gps <- all_gps_data %>%
+  mutate(new_date = as.Date(timestamp),
+         time = strftime(timestamp, format="%H:%M:%S"),
+         day_number = dense_rank(new_date),
+         day_label = paste("Day", day_number)) %>%
+  group_by(new_date) %>%
+  mutate(stops = case_when(time == max(time) ~ "Stop",
+                           TRUE ~"Bike"
+                           )) %>%
+  ungroup()
+
+
+```
+
+
 Print out leaflet track
 ```{r}
-all_gps_data %>% 
-  select(position_long, position_lat) %>%
-  as.matrix() %>%
-  leaflet(  ) %>%
+leaflet(  ) %>%
   addTiles() %>%
-  addPolylines( )
+  addPolylines(data = clean_gps,
+               lng = ~position_long,
+               lat = ~position_lat) %>%
+  addMarkers(data = clean_gps %>%
+                filter(stops == "Stop"),
+            lat = ~position_lat,
+            lng = ~position_long,
+  label = clean_gps$day_label
+    )
 ```
 
 
