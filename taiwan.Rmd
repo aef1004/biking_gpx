@@ -7,13 +7,11 @@ output: html_document
 
 Download GPX data from connect.Garmin.com
 
-Another option would be to read in the .fit files for more data
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
+```{r message = False}
 library(tidyverse)
 library(sf)
 library(leaflet)
@@ -56,6 +54,7 @@ Create west coast train line
 # 
 # # write to file
 # writeLines(gpx_content, "./data/taiwan/train_hsinchu_to_kaohsiung.gpx")
+
 ```
 
 
@@ -63,7 +62,7 @@ Read in west coast train line
 ```{r}
 train_gpx_file <- "./data/taiwan/train_hsinchu_to_kaohsiung.gpx"
 
-train_track <- st_read(gpx_file, layer = "track_points")
+train_track <- st_read(train_gpx_file, layer = "track_points")
 
 # Add an index so I can manually arrange in order
 train_track <- train_track %>%
@@ -77,6 +76,24 @@ train_track_line <- train_track %>%
   st_linestring() %>%
   st_sfc(crs = 4326)
 ```
+
+Add in where we stopped at night
+```{r}
+train_track_line
+
+all_tracks %>%
+  as_data_frame()
+  mutate(new_date = as.Date(time),
+         time = strftime(timestamp, format="%H:%M:%S"),
+         day_number = dense_rank(new_date),
+         day_label = paste("Day", day_number)) %>%
+  group_by(new_date) %>%
+  mutate(stops = case_when(time == max(time) ~ "Stop",
+                           TRUE ~"Bike"
+                           )) %>%
+  ungroup()
+```
+
 
 
 ```{r}
